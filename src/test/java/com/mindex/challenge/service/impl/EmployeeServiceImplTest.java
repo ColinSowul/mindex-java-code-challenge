@@ -1,9 +1,12 @@
 package com.mindex.challenge.service.impl;
 
 import com.mindex.challenge.dao.EmployeeRepository;
+import com.mindex.challenge.data.Compensation;
 import com.mindex.challenge.data.Employee;
 import com.mindex.challenge.data.ReportingStructure;
 import com.mindex.challenge.service.EmployeeService;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.UUID;
 import org.junit.Before;
@@ -29,6 +32,8 @@ public class EmployeeServiceImplTest {
     private String employeeUrl;
     private String employeeIdUrl;
     private String reportingStructureUrl;
+    private String compensationCreateUrl;
+    private String compensationReadUrl;
 
     @Autowired
     private EmployeeService employeeService;
@@ -47,6 +52,8 @@ public class EmployeeServiceImplTest {
         employeeUrl = "http://localhost:" + port + "/employee";
         employeeIdUrl = "http://localhost:" + port + "/employee/{id}";
         reportingStructureUrl = "http://localhost:" + port + "/reportingStructure/{id}";
+        compensationCreateUrl = "http://localhost:" + port + "/compensation";
+        compensationReadUrl = "http://localhost:" + port + "/compensation/{id}";
     }
 
     @Test
@@ -109,6 +116,23 @@ public class EmployeeServiceImplTest {
         ReportingStructure output = restTemplate.getForEntity(reportingStructureUrl, ReportingStructure.class, testEmployee1.getEmployeeId()).getBody();
         assertEquals(testEmployee1.getEmployeeId(), output.getEmployee().getEmployeeId());
         assertEquals(4, output.getNumberOfReports());
+    }
+
+    @Test
+    public void testCompensationCreateAndRead() {
+        Compensation testCompensation = new Compensation();
+        Employee testEmployee = createBlankEmployee();
+        testCompensation.setEmployee(testEmployee);
+        testCompensation.setSalary(new BigDecimal(60000.00));
+        testCompensation.setEffectiveDate(LocalDate.parse("2020-12-20"));
+
+        restTemplate.postForEntity(compensationCreateUrl, testCompensation, Compensation.class);
+
+        Compensation readCompensation = restTemplate.getForEntity(compensationReadUrl, Compensation.class, testEmployee.getEmployeeId()).getBody();
+
+        assertEquals(testCompensation.getEmployee().getEmployeeId(), readCompensation.getEmployee().getEmployeeId());
+        assertEquals(testCompensation.getSalary(), readCompensation.getSalary());
+        assertEquals(testCompensation.getEffectiveDate(), readCompensation.getEffectiveDate());
     }
 
     private Employee createBlankEmployee() {
